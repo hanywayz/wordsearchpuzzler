@@ -1,0 +1,10 @@
+puzzles:
+    - 1:
+        category : "Computer Languages"
+        words :
+            - Java
+            - Python
+            - GoLang
+            - NodeJs
+            - DotNet
+            - Pascal
