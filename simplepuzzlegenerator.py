@@ -18,14 +18,14 @@ def fillWordGrid():
         word = get_if_reversed(word)
         wordLen = len(word)
 
-        # orientations = ['Sleeping', 'Standing', 'Diag-Right', 'Diag-Left']
-        orientations = ['Sleeping', 'Standing']
+        # orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGONAL']
+        orientations = ['HORIZONTAL', 'VERTICAL']
 
         orientation = random.choice(orientations)
-        if orientation == 'Sleeping':
+        if orientation == 'HORIZONTAL':
             row = rowIndexList.pop(0)
             col = random.randint(0, (gridLen - wordLen - 1))
-        elif orientation == 'Standing':
+        elif orientation == 'VERTICAL':
             row = random.randint(0, (gridLen - wordLen - 1))
             col = colIndexList.pop(0)
         else:
@@ -40,27 +40,27 @@ def fillWordGrid():
         print("isOverlapping", isOverlapping, "word:", word)
 
         if isOverlapping:
-            # if orientation == 'Sleeping':
+            # if orientation == 'HORIZONTAL':
             #     col =
-            # elif orientation == 'Standing':
+            # elif orientation == 'VERTICAL':
             #     row =
             # else:
             #
             conflictingWords = filledInWords
 
             row, col = resolveConflicts(word, row, col, orientation,conflictingWords)
-        else:
-            for c in word:
-                final_array[row][col] = c
-                if orientation == 'Sleeping':
-                    col = col + 1
-                elif orientation == 'Standing':
-                    row = row + 1
-                else:
-                    row = row + 1
-                    col = col + 1
+        
+        for c in word:
+            final_array[row][col] = c
+            if orientation == 'HORIZONTAL':
+                col = col + 1
+            elif orientation == 'VERTICAL':
+                row = row + 1
+            else:
+                row = row + 1
+                col = col + 1
 
-            filledInWords.append(word)
+        filledInWords.append(word)
 
     print(final_array)
 
@@ -81,9 +81,10 @@ def checkIfOverlapping(tempData, word, row, col, orientation):
         if (tempData[row][col]) != '-':
             overlapping = True;
             break
-        if orientation == 'Sleeping':
+            
+        if orientation == 'HORIZONTAL':
             col = col + 1
-        elif orientation == 'Standing':
+        elif orientation == 'VERTICAL':
             row = row + 1
         else:
             row = row + 1
