@@ -5,7 +5,7 @@ import numpy as np
 gridLen = 12
 final_array = np.full([gridLen, gridLen], '-')
 
-words = ["KARNATAKA", "DELHI", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam","Sikkim","Uttarakhand"]
+words = ["KARNATAKA", "DELHI", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
 
 
 def fillBlanks():
@@ -20,12 +20,20 @@ def fillWordGrid():
         row = tempData[word][1]
         col = tempData[word][2]
 
-        print('row:', row, ' col:', col, 'orientation', orientation, 'word:', word)
+        # print('row:', row, ' col:', col, 'orientation', orientation, 'word:', word)
 
-        ## TODO : Overlapping row and columns
+        overlapping = checkIfOverlapping(final_array, word, row, col, orientation);
+        print("isOverlapping:", overlapping, 'word:', word)
+        if overlapping:
+            row, col, tempData = generateNonOverlappingIndex(tempData, word, row, col, orientation);
+
         ## TODO : Overlapping cell values
+        ## TODO : Configurable Repeatability
 
         for c in word:
+            # if final_array[row - 1][col - 1] != '-':
+            #     print('OVERWRITE ALARM!! row', row - 1, "col:", col - 1)
+
             final_array[row - 1][col - 1] = c
             if orientation == 'Sleeping':
                 col = col + 1
@@ -34,17 +42,16 @@ def fillWordGrid():
             else:
                 row = row + 1
                 col = col + 1
-
+    ## TODO : Implement Diag Left Orientation
     ## TODO : Fill unfiiled cells with random charaters
     # print(final_array)
 
 
 def generateUniqueIndex():
-    list = []
-    for i in range(5):
-        r = random.randint(1, gridLen)
-        if r not in list: list.append(r)
-    return list
+    randomValues = list(range(1, 12))
+    random.shuffle(randomValues)
+
+    return randomValues
 
 
 def generateGridPositions():
@@ -53,33 +60,68 @@ def generateGridPositions():
         print("Error")
     wordCount = len(words)
     tempData = dict()
-    orientations = ['Sleeping', 'Standing', 'Diag-Right', 'Diag-Left']
-    # orientations = ['Sleeping']
+    # orientations = ['Sleeping', 'Standing', 'Diag-Right', 'Diag-Left']
+    orientations = ['Sleeping', 'Standing']
 
     rowIndexList = generateUniqueIndex()
     colIndexList = generateUniqueIndex()
+
+    print("rowIndexList:", rowIndexList)
 
     for word in words:
         word = get_if_reversed(word)
         wordLen = len(word)
 
-        orientation = random.choices(orientations)
+        orientation = random.choice(orientations)
         if orientation == 'Sleeping':
-            row = rowIndexList[0]
-            rowIndexList.remove(0)
-            col = random.randint(1, (gridLen - wordLen))
-        elif orientation == 'Standing':
-            row = random.randint(1, (gridLen - wordLen))
-            col = colIndexList[0]
-            colIndexList.remove(0)
-        else:
-            row = random.randint(1, (gridLen - wordLen))
+            row = rowIndexList.pop(0)
             col = random.randint(1, (gridLen - wordLen))
 
-        tempData[word] = [orientation[0], row, col]
+        elif orientation == 'Standing':
+            row = random.randint(1, (gridLen - wordLen))
+            col = colIndexList.pop(0)
+        else:
+            row = rowIndexList.pop(0)
+            col = colIndexList.pop(0)
+
+        tempData[word] = [orientation, row, col]
+
     print(tempData)
     return tempData
 
+
+def checkIfOverlapping(tempData, word, row, col, orientation):
+    overlapping = False
+    for c in word:
+        if (tempData[row][col]) != '-':
+            overlapping = True;
+            break
+        if orientation == 'Sleeping':
+            col = col + 1
+        elif orientation == 'Standing':
+            row = row + 1
+        else:
+            row = row + 1
+            col = col + 1
+    return overlapping
+
+
+def generateNonOverlappingIndex(tempData, word, row, col, orientation):
+    return row, col
+
+
+# def fixOverLappingIndex(tempData):
+#     orientationData = dict()
+#
+#     for word in tempData.keys():
+#         orientation = tempData[word][0]
+#         if orientation in orientationData.keys() :
+#             orientationData[orientation].append(word)
+#         else:
+#             orientationData[orientation] = [word]
+#
+#     print(orientationData)
+#     return tempData
 
 def get_if_reversed(word):
     word = word.upper()
