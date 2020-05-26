@@ -1,4 +1,5 @@
 import random
+import string
 
 import numpy as np
 
@@ -15,8 +16,8 @@ def fillWordGrid():
         word = get_if_reversed(word)
         wordLen = len(word)
 
-        # orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD', 'DIAGBACKWARD']
-        orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD']
+        orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD', 'DIAGBACKWARD']
+        # orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD']
         orientation = random.choice(orientations)
 
         count = 0
@@ -24,8 +25,8 @@ def fillWordGrid():
         while isOverlapping:
             col, row = getStartPostion(orientation, wordLen)
             isOverlapping = checkIfOverlapping(word, row, col, orientation, filledInWords)
-            count= count+1
-            if count >100 :
+            count = count + 1
+            if count > 100:
                 print("Gridlock")
                 return
 
@@ -34,6 +35,8 @@ def fillWordGrid():
     print(filledInWords)
 
     final_array = generateFinalGrid(filledInWords)
+    print(final_array)
+    final_array = fillInGibberish(final_array)
     print(final_array)
 
 
@@ -56,6 +59,15 @@ def generateFinalGrid(filledInWords):
                 row = row + 1
                 col = col - 1
 
+    return final_array
+
+
+def fillInGibberish(final_array):
+    for x in range(0, final_array.shape[0]):
+        for y in range(0, final_array.shape[1]):
+            if final_array[x, y] == '-' :
+                final_array[x, y] = random.choice(string.ascii_uppercase)
+    print(final_array)
     return final_array
 
 
