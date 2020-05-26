@@ -3,7 +3,6 @@ import random
 import numpy as np
 
 gridLen = 12
-final_array = np.full([gridLen, gridLen], '-')
 
 words = ["KARNATAKA", "DELHI", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
 
@@ -16,22 +15,30 @@ def fillWordGrid():
         word = get_if_reversed(word)
         wordLen = len(word)
 
-        orientations = ['HORIZONTAL', 'VERTICAL']
-
+        # orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD', 'DIAGBACKWARD']
+        orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD']
         orientation = random.choice(orientations)
-        col, row = getRowCol(orientation, wordLen)
+
+        count = 0
         isOverlapping = True
         while isOverlapping:
+            col, row = getStartPostion(orientation, wordLen)
             isOverlapping = checkIfOverlapping(word, row, col, orientation, filledInWords)
-            if isOverlapping:
-                col, row = getRowCol(orientation, wordLen)
+            count= count+1
+            if count >100 :
+                print("Gridlock")
+                return
 
         filledInWords.append([word, orientation, row, col])
 
-        # print("word:", word, "row:", row, "col:", col, "orientation:", orientation)
-
     print(filledInWords)
 
+    final_array = generateFinalGrid(filledInWords)
+    print(final_array)
+
+
+def generateFinalGrid(filledInWords):
+    final_array = np.full([gridLen, gridLen], '-')
     for eachWord in filledInWords:
         row = eachWord[2]
         col = eachWord[3]
@@ -42,21 +49,34 @@ def fillWordGrid():
                 col = col + 1
             elif orientation == 'VERTICAL':
                 row = row + 1
-    print(final_array)
+            elif orientation == 'DIAGFORWARD':
+                row = row + 1
+                col = col + 1
+            elif orientation == 'DIAGBACKWARD':
+                row = row + 1
+                col = col - 1
+
+    return final_array
 
 
-def getRowCol(orientation, wordLen):
+def getStartPostion(orientation, wordLen):
     if orientation == 'HORIZONTAL':
         row = random.randint(0, 11)
         col = random.randint(0, (gridLen - wordLen - 1))
     elif orientation == 'VERTICAL':
         row = random.randint(0, (gridLen - wordLen - 1))
         col = random.randint(0, 11)
+    elif orientation == 'DIAGFORWARD':
+        row = random.randint(0, (gridLen - wordLen - 1))
+        col = random.randint(0, (gridLen - wordLen - 1))
+    elif orientation == 'DIAGBACKWARD':
+        row = random.randint(0, (gridLen - wordLen - 1))
+        col = random.randint(wordLen, gridLen - 1)
+
     return col, row
 
 
 def checkIfOverlapping(word, row, col, orientation, filledInWords):
-    overlapping = False
     wordCells = getCells(word, row, col, orientation)
 
     # print("CHECK OVERLAP word:", word)
@@ -66,14 +86,9 @@ def checkIfOverlapping(word, row, col, orientation, filledInWords):
         for refCell in tempWordCells:
             for wordCell in wordCells:
                 if refCell[1] == wordCell[1] and refCell[2] == wordCell[2]:
-                    overlapping = True
-                    # print("overlapping!!! cell :", wordCell[1], wordCell[2], "word :", word, "row:", row, "col:", col,
-                    #       "orientation:", orientation,
-                    #       "filledInWord", filledInWord)
-                    # print("wordCells", wordCells, "tempWordCells", tempWordCells)
                     return True
         # print("CheckIfOverlapping word:", word, "filledInWord[0]:",filledInWord[0], "overlapping:",overlapping)
-    return overlapping
+    return False
 
 
 def getCells(word, row, col, orientation):
@@ -84,11 +99,13 @@ def getCells(word, row, col, orientation):
             col = col + 1
         elif orientation == 'VERTICAL':
             row = row + 1
+        elif orientation == 'DIAGFORWARD':
+            row = row + 1
+            col = col + 1
+        elif orientation == 'DIAGBACKWARD':
+            row = row + 1
+            col = col - 1
     return cells
-
-
-def resolveConflicts(word, row, col, orientation, conflictingWords):
-    return row, col
 
 
 def get_if_reversed(word):
@@ -98,6 +115,6 @@ def get_if_reversed(word):
     return word
 
 
-class WordSearchGenretor:
+class WordSearchGenerator:
     if __name__ == "__main__":
         fillWordGrid()
