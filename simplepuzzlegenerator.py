@@ -5,15 +5,9 @@ import numpy as np
 import pandas as pd
 import pdfkit
 
+import yaml
+
 gridLen = 12
-
-
-# TODO : Read from configuration file
-
-
-# TODO : Read headers
-# TODO : Paging Logic
-# TODO : Page Size A5
 
 def fillWordGrid(words, title):
     filledInWords = list()
@@ -24,7 +18,6 @@ def fillWordGrid(words, title):
         wordLen = len(word)
 
         orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD', 'DIAGBACKWARD']
-        # orientations = ['HORIZONTAL', 'VERTICAL', 'DIAGFORWARD']
         orientation = random.choice(orientations)
 
         count = 0
@@ -42,12 +35,8 @@ def fillWordGrid(words, title):
     print(filledInWords)
 
     solution_array = generateFinalGrid(filledInWords)
-    # print(solution_array)
-    # generate_html(words, solution_array, 1)
-
     problem_array = fillInGibberish(solution_array)
-    # print(problem_array)
-    # generate_html(words, problem_array, solution_array, title)
+
     return problem_array, solution_array
 
 
@@ -179,18 +168,12 @@ class WordSearchGenerator:
     if __name__ == "__main__":
         masterList = []
 
-        words = ["Ramnarayan", "Subrata", "Manojit", "Shibshekhar", "Gopi", "Shibendu", "Kingshuk", "Sanjib", "Sourav"]
-        title = "REC Durgapur 2000 Alumni"
+        with open('words.yml') as f:
+            puzzleSets = yaml.load_all(f, Loader=yaml.FullLoader)
 
-        masterList.append([title, words])
-
-        words = ["Karnataka", "Delhi", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
-        title = "States of India"
-        masterList.append([title, words])
-
-        for entry in masterList:
-            problem_array, solution_array = fillWordGrid(entry[1], entry[0])
-            generate_html(entry[1], problem_array, solution_array, entry[0])
-
+            for puzzle in puzzleSets:
+                for title, words in puzzle.items():
+                    problem_array, solution_array = fillWordGrid(words, title)
+                    generate_html(words, problem_array, solution_array, title)
 
 
