@@ -4,7 +4,7 @@ import string
 import numpy as np
 
 gridLen = 12
-
+# TODO : Read from configuration file
 words = ["KARNATAKA", "DELHI", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
 
 
@@ -26,8 +26,9 @@ def fillWordGrid():
             col, row = getStartPostion(orientation, wordLen)
             isOverlapping = checkIfOverlapping(word, row, col, orientation, filledInWords)
             count = count + 1
-            if count > 100:
-                print("Gridlock")
+            if count > 30:
+                print("Gridlock Detected!! Retrying!")
+                fillWordGrid()
                 return
 
         filledInWords.append([word, orientation, row, col])
@@ -67,7 +68,7 @@ def fillInGibberish(final_array):
         for y in range(0, final_array.shape[1]):
             if final_array[x, y] == '-' :
                 final_array[x, y] = random.choice(string.ascii_uppercase)
-    print(final_array)
+
     return final_array
 
 
