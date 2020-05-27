@@ -6,14 +6,16 @@ import pandas as pd
 import pdfkit
 
 gridLen = 12
+
+
 # TODO : Read from configuration file
-words = ["Karnataka", "Delhi", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
+
 
 # TODO : Read headers
 # TODO : Paging Logic
 # TODO : Page Size A5
 
-def fillWordGrid():
+def fillWordGrid(words, title):
     filledInWords = list()
 
     for word in words:
@@ -33,46 +35,56 @@ def fillWordGrid():
             count = count + 1
             if count > 30:
                 print("Gridlock Detected!! Retrying!")
-                fillWordGrid()
-                return
+                return fillWordGrid(words, title)
 
         filledInWords.append([word, orientation, row, col])
 
     print(filledInWords)
 
-    final_array = generateFinalGrid(filledInWords)
-    print(final_array)
-    generate_html(words, final_array, 1)
+    solution_array = generateFinalGrid(filledInWords)
+    # print(solution_array)
+    # generate_html(words, solution_array, 1)
 
-    final_array_withgibberish = fillInGibberish(final_array)
-    print(final_array_withgibberish)
-    generate_html(words, final_array_withgibberish, 2)
+    problem_array = fillInGibberish(solution_array)
+    # print(problem_array)
+    # generate_html(words, problem_array, solution_array, title)
+    return problem_array, solution_array
 
 
-def generate_html(words, final_array, val):
+def generate_html(words, problem_array, solution_array, title):
     # TODO : Use a templating engine
+    print(problem_array)
+    print(solution_array)
+    problem = generatePageHTML(problem_array, words, title)
 
-    df = pd.DataFrame(final_array)
-    html = df.to_html(index=False, header=False)
-    print(html)
+    solution = generatePageHTML(solution_array, words, title)
+
+    html = problem + "<p style =/'page-break-before: always;/' > </p>" + solution
+
+    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    output_file = "C://Users/sourav/Desktop/samples/" + title + ".pdf"
+
+    options = {'page-size': 'A5', 'dpi': 400}
+
+    pdfkit.from_string(html, output_file, configuration=config, options=options)
+
+
+def generatePageHTML(input_array, words, title):
+    df = pd.DataFrame(input_array)
+    puzzle_html = df.to_html(index=False, header=False)
 
     reshaped_words = np.reshape(words, (-1, 3))
     words_df = pd.DataFrame(reshaped_words)
     words_html = words_df.to_html(index=False, header=False)
-    print(words_html)
 
-    base_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><br><hr/><br>WORDS_TO_REPLACE</p></body></html>'
-    html = base_html.replace("TABLE_TO_REPLACE", html)
-    html = html.replace("TITLE_TO_REPLACE", 'Name of Indian States')
+    template_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><br><hr/><br>WORDS_TO_REPLACE</p></body></html>'
+
+    html = template_html.replace("TABLE_TO_REPLACE", puzzle_html)
+    html = html.replace("TITLE_TO_REPLACE", title)
     html = html.replace("WORDS_TO_REPLACE", words_html)
 
-    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    output_file = "C://Users/sourav/Desktop/samples/out" + str(val) + ".pdf"
-
-    options = {'page-size': 'A5', 'dpi': 400}
-
-    pdfkit.from_string(html, output_file, configuration=config,options=options)
+    return html
 
 
 def generateFinalGrid(filledInWords):
@@ -98,12 +110,13 @@ def generateFinalGrid(filledInWords):
 
 
 def fillInGibberish(final_array):
-    for x in range(0, final_array.shape[0]):
-        for y in range(0, final_array.shape[1]):
-            if final_array[x, y] == '-':
-                final_array[x, y] = random.choice(string.ascii_uppercase)
+    new_array = np.array(final_array)
+    for x in range(0, new_array.shape[0]):
+        for y in range(0, new_array.shape[1]):
+            if new_array[x, y] == '-':
+                new_array[x, y] = random.choice(string.ascii_uppercase)
 
-    return final_array
+    return new_array
 
 
 def getStartPostion(orientation, wordLen):
@@ -164,4 +177,20 @@ def get_if_reversed(word):
 
 class WordSearchGenerator:
     if __name__ == "__main__":
-        fillWordGrid()
+        masterList = []
+
+        words = ["Ramnarayan", "Subrata", "Manojit", "Shibshekhar", "Gopi", "Shibendu", "Kingshuk", "Sanjib", "Sourav"]
+        title = "REC Durgapur 2000 Alumni"
+
+        masterList.append([title, words])
+
+        words = ["Karnataka", "Delhi", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
+        title = "States of India"
+        masterList.append([title, words])
+
+        for entry in masterList:
+            problem_array, solution_array = fillWordGrid(entry[1], entry[0])
+            generate_html(entry[1], problem_array, solution_array, entry[0])
+
+
+
