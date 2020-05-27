@@ -2,11 +2,16 @@ import random
 import string
 
 import numpy as np
+import pandas as pd
+import pdfkit
 
 gridLen = 12
 # TODO : Read from configuration file
-words = ["KARNATAKA", "DELHI", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
+words = ["Karnataka", "Delhi", "Kerala", "Manipur", "Mizoram", "Tripura", "Assam", "Sikkim", "Uttarakhand"]
 
+# TODO : Read headers
+# TODO : Paging Logic
+# TODO : Page Size A5
 
 def fillWordGrid():
     filledInWords = list()
@@ -37,8 +42,37 @@ def fillWordGrid():
 
     final_array = generateFinalGrid(filledInWords)
     print(final_array)
-    final_array = fillInGibberish(final_array)
-    print(final_array)
+    generate_html(words, final_array, 1)
+
+    final_array_withgibberish = fillInGibberish(final_array)
+    print(final_array_withgibberish)
+    generate_html(words, final_array_withgibberish, 2)
+
+
+def generate_html(words, final_array, val):
+    # TODO : Use a templating engine
+
+    df = pd.DataFrame(final_array)
+    html = df.to_html(index=False, header=False)
+    print(html)
+
+    reshaped_words = np.reshape(words, (-1, 3))
+    words_df = pd.DataFrame(reshaped_words)
+    words_html = words_df.to_html(index=False, header=False)
+    print(words_html)
+
+    base_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><br><hr/><br>WORDS_TO_REPLACE</p></body></html>'
+    html = base_html.replace("TABLE_TO_REPLACE", html)
+    html = html.replace("TITLE_TO_REPLACE", 'Name of Indian States')
+    html = html.replace("WORDS_TO_REPLACE", words_html)
+
+    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    output_file = "C://Users/sourav/Desktop/samples/out" + str(val) + ".pdf"
+
+    options = {'page-size': 'A5', 'dpi': 400}
+
+    pdfkit.from_string(html, output_file, configuration=config,options=options)
 
 
 def generateFinalGrid(filledInWords):
@@ -66,7 +100,7 @@ def generateFinalGrid(filledInWords):
 def fillInGibberish(final_array):
     for x in range(0, final_array.shape[0]):
         for y in range(0, final_array.shape[1]):
-            if final_array[x, y] == '-' :
+            if final_array[x, y] == '-':
                 final_array[x, y] = random.choice(string.ascii_uppercase)
 
     return final_array
