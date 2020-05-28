@@ -4,10 +4,21 @@ import string
 import numpy as np
 import pandas as pd
 import pdfkit
-
 import yaml
+from PyPDF2 import PdfFileMerger
 
 gridLen = 12
+
+basepath = "C://Users/sourav/Desktop/samples/"
+path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+
+
+# TODO : Replace '-' with blank space in existing file
+# TODO : Logic to generate multi page book
+# TODO : Coverpage and Last Page : Logic to generate multi page book
+# TODO : Puzzle Number
+# TODO : Repeatability Logic
+
 
 def fillWordGrid(words, title):
     filledInWords = list()
@@ -40,26 +51,26 @@ def fillWordGrid(words, title):
     return problem_array, solution_array
 
 
-def generate_html(words, problem_array, solution_array, title):
+def generate_html(words, problem_array, solution_array, title, page_no, offset):
     # TODO : Use a templating engine
     print(problem_array)
     print(solution_array)
-    problem = generatePageHTML(problem_array, words, title)
+    problem = generatePageHTML(problem_array, words, title, page_no)
 
-    solution = generatePageHTML(solution_array, words, title)
+    solution = generatePageHTML(solution_array, words, title, (page_no + offset))
 
     html = problem + "<p style =/'page-break-before: always;/' > </p>" + solution
 
-    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    output_file = "C://Users/sourav/Desktop/samples/" + title + ".pdf"
+    output_file = basepath + title + ".pdf"
 
     options = {'page-size': 'A5', 'dpi': 400}
 
     pdfkit.from_string(html, output_file, configuration=config, options=options)
+    return output_file
 
 
-def generatePageHTML(input_array, words, title):
+def generatePageHTML(input_array, words, title, page_no):
     df = pd.DataFrame(input_array)
     puzzle_html = df.to_html(index=False, header=False)
 
@@ -67,11 +78,12 @@ def generatePageHTML(input_array, words, title):
     words_df = pd.DataFrame(reshaped_words)
     words_html = words_df.to_html(index=False, header=False)
 
-    template_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><br><hr/><br>WORDS_TO_REPLACE</p></body></html>'
+    template_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><hr/><br>WORDS_TO_REPLACE</p> <p style=\'text-align:center\'>Page : PAGE_NO</p></body></html>'
 
     html = template_html.replace("TABLE_TO_REPLACE", puzzle_html)
     html = html.replace("TITLE_TO_REPLACE", title)
     html = html.replace("WORDS_TO_REPLACE", words_html)
+    html = html.replace("PAGE_NO", str(page_no))
 
     return html
 
@@ -164,16 +176,34 @@ def get_if_reversed(word):
     return word
 
 
+def printToPDF(puzzle_files):
+    merger = PdfFileMerger()
+    merger.append(open(basepath + "Cover Page.pdf", 'rb'))
+    for puzzle_file in puzzle_files:
+        merger.append(open(puzzle_file, 'rb'))
+    merger.append(open(basepath + "Last Page.pdf", 'rb'))
+
+    with open(basepath + "Word Puzzle Book.pdf", "wb") as fout:
+        merger.write(fout)
+
+
 class WordSearchGenerator:
     if __name__ == "__main__":
         masterList = []
+
+        puzzle_files = list()
 
         with open('words.yml') as f:
             puzzleSets = yaml.load_all(f, Loader=yaml.FullLoader)
 
             for puzzle in puzzleSets:
+                puzzle_count = len(puzzle.keys())
+                print("puzzle_count",puzzle_count)
+                page_no = 7
                 for title, words in puzzle.items():
                     problem_array, solution_array = fillWordGrid(words, title)
-                    generate_html(words, problem_array, solution_array, title)
+                    output_file_path = generate_html(words, problem_array, solution_array, title, page_no,(puzzle_count+2) )
+                    puzzle_files.append(output_file_path)
+                    page_no = page_no + 1
 
-
+        printToPDF(puzzle_files)
