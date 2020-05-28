@@ -14,8 +14,6 @@ path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 
 
 # TODO : Replace '-' with blank space in existing file
-# TODO : Logic to generate multi page book
-# TODO : Coverpage and Last Page : Logic to generate multi page book
 # TODO : Puzzle Number
 # TODO : Repeatability Logic
 
@@ -51,27 +49,38 @@ def fillWordGrid(words, title):
     return problem_array, solution_array
 
 
-def generate_html(words, problem_array, solution_array, title, page_no, offset):
-    # TODO : Use a templating engine
-    print(problem_array)
-    print(solution_array)
-    problem = generatePageHTML(problem_array, words, title, page_no)
+def generate_html(words, input_array, title, page_no):
+    html = generatePageHTML(input_array, words, title, page_no)
 
-    solution = generatePageHTML(solution_array, words, title, (page_no + offset))
+    return generatePagePDF(html, page_no)
 
-    html = problem + "<p style =/'page-break-before: always;/' > </p>" + solution
 
+def generatePagePDF(html, page_no):
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    output_file = basepath + title + ".pdf"
-
+    output_file = basepath + str(page_no) + ".pdf"
     options = {'page-size': 'A5', 'dpi': 400}
-
     pdfkit.from_string(html, output_file, configuration=config, options=options)
     return output_file
 
 
+def generate_Content_page(titles, problem_titlepages, solution_titlepages):
+    html = '<html> <head> <style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}th{font-size : 18px; font-weight:bold}td{ border-bottom: 1px solid black !important; text-align: left; vertical-align: middle; font-size : 16px; padding:10px; }th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style> </head>'
+    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 18px;\'> Content </p> <hr><br>'
+    html = html + '<table> <th span=2> Problems </th>'
+    for probs in problem_titlepages:
+        html = html + '<tr><td>' + probs[0] + '</td><td>' + str(probs[1]) + '</td></tr>'
+    html = html + '<tr><td></td><td></td></tr> <table>'
+    html = html + '<table> <th > Solutions </th>'
+    for sols in solution_titlepages:
+        html = html + '<tr><td>' + sols[0] + '</td><td>' + str(sols[1]) + '</td></tr>'
+    html = html + '</table> </body> </html>'
+
+    return generatePagePDF(html, 3)
+
+
 def generatePageHTML(input_array, words, title, page_no):
     df = pd.DataFrame(input_array)
+    df = df.replace('-', '*')
     puzzle_html = df.to_html(index=False, header=False)
 
     reshaped_words = np.reshape(words, (-1, 3))
@@ -176,10 +185,18 @@ def get_if_reversed(word):
     return word
 
 
-def printToPDF(puzzle_files):
+def printBook(problem_puzzle_files, solution_puzzle_files, content_page):
     merger = PdfFileMerger()
     merger.append(open(basepath + "Cover Page.pdf", 'rb'))
-    for puzzle_file in puzzle_files:
+    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    merger.append(open(content_page, 'rb'))
+    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    for puzzle_file in problem_puzzle_files:
+        merger.append(open(puzzle_file, 'rb'))
+
+    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    merger.append(open(basepath + "Solution_Blank.pdf", 'rb'))
+    for puzzle_file in solution_puzzle_files:
         merger.append(open(puzzle_file, 'rb'))
     merger.append(open(basepath + "Last Page.pdf", 'rb'))
 
@@ -191,19 +208,31 @@ class WordSearchGenerator:
     if __name__ == "__main__":
         masterList = []
 
-        puzzle_files = list()
+        problem_puzzle_files = list()
+        solution_puzzle_files = list()
+        solution_puzzle_files = list()
 
         with open('words.yml') as f:
             puzzleSets = yaml.load_all(f, Loader=yaml.FullLoader)
 
             for puzzle in puzzleSets:
                 puzzle_count = len(puzzle.keys())
-                print("puzzle_count",puzzle_count)
-                page_no = 7
+                page_no = 6
+                problem_titlepages = list();
+                solution_titlepages = list();
                 for title, words in puzzle.items():
                     problem_array, solution_array = fillWordGrid(words, title)
-                    output_file_path = generate_html(words, problem_array, solution_array, title, page_no,(puzzle_count+2) )
-                    puzzle_files.append(output_file_path)
+
+                    problem_file_path = generate_html(words, problem_array, title, page_no)
+                    solution_file_path = generate_html(words, solution_array, title, (page_no + puzzle_count + 2))
+
+                    problem_puzzle_files.append(problem_file_path)
+                    solution_puzzle_files.append(solution_file_path)
+
+                    problem_titlepages.append([title, page_no])
+                    solution_titlepages.append([title, page_no + puzzle_count + 2])
+
                     page_no = page_no + 1
 
-        printToPDF(puzzle_files)
+                content_page = generate_Content_page(puzzle.keys(), problem_titlepages, solution_titlepages)
+        printBook(problem_puzzle_files, solution_puzzle_files, content_page)
