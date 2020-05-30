@@ -7,6 +7,10 @@ import pdfkit
 import yaml
 from PyPDF2 import PdfFileMerger
 
+
+from time import time
+import itertools
+
 gridLen = 12
 
 basepath = "C://Users/sourav/Desktop/book_generation/"
@@ -16,6 +20,8 @@ path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 # TODO : Replace '-' with blank space in existing file
 # TODO : Puzzle Number
 # TODO : Repeatability Logic
+# TODO : Fix Page No
+# TODO : Apply templates -  cover page, fist page, content etc
 
 
 def fillWordGrid(words, title):
@@ -57,7 +63,7 @@ def generate_html(words, input_array, title, page_no):
 
 def generatePagePDF(html, page_no):
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    output_file = basepath + str(page_no) + ".pdf"
+    output_file = basepath + "/pages/" + str(page_no) + ".pdf"
     options = {'page-size': 'A5', 'dpi': 400}
     pdfkit.from_string(html, output_file, configuration=config, options=options)
     return output_file
@@ -65,14 +71,16 @@ def generatePagePDF(html, page_no):
 
 def generate_Content_page(titles, problem_titlepages, solution_titlepages):
     html = '<html> <head> <style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}th{font-size : 18px; font-weight:bold}td{ border-bottom: 1px solid black !important; text-align: left; vertical-align: middle; font-size : 16px; padding:10px; }th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style> </head>'
-    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 24px;\'> Content </p> <hr><br>'
-    html = html + '<table> <th span=2> Problems </th>'
-    for probs in problem_titlepages:
-        html = html + '<tr><td>' + probs[0] + '</td><td>' + str(probs[1]) + '</td></tr>'
-    html = html + '<tr><td></td><td></td></tr> <table>'
-    html = html + '<table> <th > Solutions </th>'
-    for sols in solution_titlepages:
-        html = html + '<tr><td>' + sols[0] + '</td><td>' + str(sols[1]) + '</td></tr>'
+    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 24px;\'> Problems and Solutions </p> <hr><br>'
+    html = html + '<table>'
+    # html = html + '<table><th colspan="4"> </th>'
+    # for probs in problem_titlepages:
+    for (probs, sols) in zip(problem_titlepages, solution_titlepages):
+            html = html + '<tr><td>' + probs[0] + '</td><td>' + str(probs[1]) + '</td><td></td><td>' + str(sols[1]) + '</td></tr>'
+    # html = html + '<tr><td></td><td></td></tr> <table>'
+    # html = html + '<table> <th > Solutions </th>'
+    # for sols in solution_titlepages:
+    #     html = html + '<tr><td>' + sols[0] + '</td><td>' + str(sols[1]) + '</td></tr>'
     html = html + '</table> </body> </html>'
 
     return generatePagePDF(html, 3)
@@ -187,20 +195,21 @@ def get_if_reversed(word):
 
 def printBook(problem_puzzle_files, solution_puzzle_files, content_page):
     merger = PdfFileMerger()
-    merger.append(open(basepath + "Cover Page.pdf", 'rb'))
+    tempPath = basepath+"/"
+    merger.append(open(tempPath + "Cover Page.pdf", 'rb'))
     # merger.append(open(basepath + "Blank.pdf", 'rb'))
     merger.append(open(content_page, 'rb'))
-    merger.append(open(basepath + "Problem_Blank.pdf", 'rb'))
+    merger.append(open(tempPath + "Problem_Blank.pdf", 'rb'))
     for puzzle_file in problem_puzzle_files:
         merger.append(open(puzzle_file, 'rb'))
 
-    merger.append(open(basepath + "Solution_Blank.pdf", 'rb'))
-    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    merger.append(open(tempPath + "Solution_Blank.pdf", 'rb'))
+    merger.append(open(tempPath + "Blank.pdf", 'rb'))
     for puzzle_file in solution_puzzle_files:
         merger.append(open(puzzle_file, 'rb'))
-    merger.append(open(basepath + "Last Page.pdf", 'rb'))
+    merger.append(open(tempPath + "Last Page.pdf", 'rb'))
 
-    with open(basepath + "Word Puzzle Book.pdf", "wb") as fout:
+    with open(basepath + "books_output/Word Search Puzzle Book"+str(round(time()))+".pdf", "wb") as fout:
         merger.write(fout)
 
 
@@ -217,9 +226,9 @@ class WordSearchGenerator:
 
             for puzzle in puzzleSets:
                 puzzle_count = len(puzzle.keys())
-                page_no = 6
-                problem_titlepages = list();
-                solution_titlepages = list();
+                page_no = 9
+                problem_pages = list();
+                solution_pages = list();
                 for title, words in puzzle.items():
                     problem_array, solution_array = fillWordGrid(words, title)
 
@@ -229,10 +238,10 @@ class WordSearchGenerator:
                     problem_puzzle_files.append(problem_file_path)
                     solution_puzzle_files.append(solution_file_path)
 
-                    problem_titlepages.append([title, page_no])
-                    solution_titlepages.append([title, page_no + puzzle_count + 2])
+                    problem_pages.append([title, page_no])
+                    solution_pages.append([title, page_no + puzzle_count + 2])
 
                     page_no = page_no + 1
 
-                content_page = generate_Content_page(puzzle.keys(), problem_titlepages, solution_titlepages)
+                content_page = generate_Content_page(puzzle.keys(), problem_pages, solution_pages)
         printBook(problem_puzzle_files, solution_puzzle_files, content_page)
