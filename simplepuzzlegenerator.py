@@ -9,7 +9,7 @@ from PyPDF2 import PdfFileMerger
 
 gridLen = 12
 
-basepath = "C://Users/sourav/Desktop/samples/"
+basepath = "C://Users/sourav/Desktop/book_generation/"
 path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 
 
@@ -65,7 +65,7 @@ def generatePagePDF(html, page_no):
 
 def generate_Content_page(titles, problem_titlepages, solution_titlepages):
     html = '<html> <head> <style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}th{font-size : 18px; font-weight:bold}td{ border-bottom: 1px solid black !important; text-align: left; vertical-align: middle; font-size : 16px; padding:10px; }th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style> </head>'
-    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 18px;\'> Content </p> <hr><br>'
+    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 24px;\'> Content </p> <hr><br>'
     html = html + '<table> <th span=2> Problems </th>'
     for probs in problem_titlepages:
         html = html + '<tr><td>' + probs[0] + '</td><td>' + str(probs[1]) + '</td></tr>'
@@ -188,14 +188,14 @@ def get_if_reversed(word):
 def printBook(problem_puzzle_files, solution_puzzle_files, content_page):
     merger = PdfFileMerger()
     merger.append(open(basepath + "Cover Page.pdf", 'rb'))
-    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    # merger.append(open(basepath + "Blank.pdf", 'rb'))
     merger.append(open(content_page, 'rb'))
-    merger.append(open(basepath + "Blank.pdf", 'rb'))
+    merger.append(open(basepath + "Problem_Blank.pdf", 'rb'))
     for puzzle_file in problem_puzzle_files:
         merger.append(open(puzzle_file, 'rb'))
 
-    merger.append(open(basepath + "Blank.pdf", 'rb'))
     merger.append(open(basepath + "Solution_Blank.pdf", 'rb'))
+    merger.append(open(basepath + "Blank.pdf", 'rb'))
     for puzzle_file in solution_puzzle_files:
         merger.append(open(puzzle_file, 'rb'))
     merger.append(open(basepath + "Last Page.pdf", 'rb'))
