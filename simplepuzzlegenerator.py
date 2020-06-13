@@ -16,6 +16,8 @@ gridLen = 12
 basepath = "C://Users/sourav/Desktop/book_generation/"
 path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
 
+template_html = '<!DOCTYPE html><html><head><style> body{ background-image: url(\'file:\\\\\\C:\\Users\\sourav\\Desktop\\book_generation\\footer-background.jpg\');background-repeat: no-repeat; background-attachment: fixed; background-size: 100% 100%;border: 1px dashed grey;} table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 20px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body> <p> <p class=\'pageheader\'> TITLE_TO_REPLACE</p>  <p> TABLE_TO_REPLACE</p><br/><hr style=\'1px dashed grey\'><p>WORDS_TO_REPLACE</p>  <br/></p> <footer style=\'text-align:center\'>Page : PAGE_NO</footer> </body> </html>'
+
 
 # TODO : Replace '-' with blank space in existing file
 # TODO : Puzzle Number
@@ -70,17 +72,13 @@ def generatePagePDF(html, page_no):
 
 
 def generate_Content_page(titles, problem_titlepages, solution_titlepages):
-    html = '<html> <head> <style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}th{font-size : 18px; font-weight:bold}td{ border-bottom: 1px solid black !important; text-align: left; vertical-align: middle; font-size : 16px; padding:10px; }th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style> </head>'
-    html = html + '<body><p style=\'text-align:center;font-weight:bold;font-size : 24px;\'> Problems and Solutions </p> <hr><br>'
+    html = '<html> <head> <style> body{background-image: url(\'file:///C:\\Users\\sourav\\Desktop\\book_generation\\footer-background.jpg\');background-repeat: no-repeat; background-attachment: fixed; background-size: 100% 100%;} html{border: dashed;} table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}th{font-size : 18px; font-weight:bold}td{ border-bottom: 1px solid black !important; text-align: left; vertical-align: middle; font-size : 16px; padding:10px; }th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{text-align: center;font-size : 30px;font-weight: bold;}</style> </head>'
+    html = html + '<body ><p style=\'text-align:center;font-weight:bold;font-size : 24px;\'> Problems and Solutions </p> <hr><br>'
     html = html + '<table>'
-    # html = html + '<table><th colspan="4"> </th>'
-    # for probs in problem_titlepages:
+
     for (probs, sols) in zip(problem_titlepages, solution_titlepages):
             html = html + '<tr><td>' + probs[0] + '</td><td>' + str(probs[1]) + '</td><td></td><td>' + str(sols[1]) + '</td></tr>'
-    # html = html + '<tr><td></td><td></td></tr> <table>'
-    # html = html + '<table> <th > Solutions </th>'
-    # for sols in solution_titlepages:
-    #     html = html + '<tr><td>' + sols[0] + '</td><td>' + str(sols[1]) + '</td></tr>'
+
     html = html + '</table> </body> </html>'
 
     return generatePagePDF(html, 3)
@@ -94,8 +92,6 @@ def generatePageHTML(input_array, words, title, page_no):
     reshaped_words = np.reshape(words, (-1, 3))
     words_df = pd.DataFrame(reshaped_words)
     words_html = words_df.to_html(index=False, header=False)
-
-    template_html = '<!DOCTYPE html><html><head><style> table{border-spacing: 0;border-collapse: collapse;margin-left:auto; margin-right:auto;}td{ border-bottom: 1px solid black !important; text-align: center; vertical-align: middle; font-size : 24px; padding:10px; height: 3vw; width: 3vw;}th{	border-bottom: 1px solid black !important;  text-align: center;}.pageheader{	text-align: center; 	font-size : 30px;font-weight: bold;}</style></head><body><p class=\'pageheader\'> TITLE_TO_REPLACE</p> TABLE_TO_REPLACE<p><hr/><br>WORDS_TO_REPLACE</p> <p style=\'text-align:center\'>Page : PAGE_NO</p></body></html>'
 
     html = template_html.replace("TABLE_TO_REPLACE", puzzle_html)
     html = html.replace("TITLE_TO_REPLACE", title)
@@ -138,18 +134,21 @@ def fillInGibberish(final_array):
 
 
 def getStartPostion(orientation, wordLen):
-    if orientation == 'HORIZONTAL':
-        row = random.randint(0, 11)
-        col = random.randint(0, (gridLen - wordLen - 1))
-    elif orientation == 'VERTICAL':
-        row = random.randint(0, (gridLen - wordLen - 1))
-        col = random.randint(0, 11)
-    elif orientation == 'DIAGFORWARD':
-        row = random.randint(0, (gridLen - wordLen - 1))
-        col = random.randint(0, (gridLen - wordLen - 1))
-    elif orientation == 'DIAGBACKWARD':
-        row = random.randint(0, (gridLen - wordLen - 1))
-        col = random.randint(wordLen, gridLen - 1)
+    try:
+        if orientation == 'HORIZONTAL':
+            row = random.randint(0, 11)
+            col = random.randint(0, (gridLen - wordLen - 1))
+        elif orientation == 'VERTICAL':
+            row = random.randint(0, (gridLen - wordLen - 1))
+            col = random.randint(0, 11)
+        elif orientation == 'DIAGFORWARD':
+            row = random.randint(0, (gridLen - wordLen - 1))
+            col = random.randint(0, (gridLen - wordLen - 1))
+        elif orientation == 'DIAGBACKWARD':
+            row = random.randint(0, (gridLen - wordLen - 1))
+            col = random.randint(wordLen, gridLen - 1)
+    except:
+        print(wordLen, orientation)
 
     return col, row
 
