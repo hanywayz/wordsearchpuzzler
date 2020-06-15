@@ -244,8 +244,9 @@ class WordSearchGenerator:
             for puzzle in puzzleSets:
                 puzzle_count = len(puzzle.keys())
                 page_no = 9
-                problem_pages = list();
-                solution_pages = list();
+                problem_pages = list()
+                solution_pages = list()
+
                 for title, words in puzzle.items():
                     problem_array, solution_array = fillWordGrid(words, title)
 
